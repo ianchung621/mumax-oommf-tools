@@ -1,6 +1,6 @@
 """
 reference:
-[2] OVF 2.0:
+[1] OVF 2.0:
 https://math.nist.gov/oommf/doc/userguide20b0/userguide/OVF_2.0_format.html
 """
 import numpy as np

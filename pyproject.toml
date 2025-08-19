@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mumax-oommf-tools"
+version = "0.1.0a1"
+description = "Toolkit for reading, visualizing, and analyzing full Mumax3 and OOMMF micromagnetic simulation outputs."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Hung-Yen Chung", email = "ianchung621.email@gmail.com" }
+]
+keywords = ["micromagnetics", "mumax3", "oommf", "ovf", "simulation", "magnetization", "hdf5"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Intended Audience :: Science/Research"
+]
+dynamic = ["readme", "dependencies"]
+
+[project.optional-dependencies]
+viz = [
+    "imageio",
+    "imageio-ffmpeg",
+]
+dev = [
+    "pytest",
+    "coverage[toml]",
+]
+
+[tool.setuptools.dynamic]
+readme = { file = "README.md", content-type = "text/markdown" }
+dependencies = { file = "requirements.txt" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "src"]
+
+[tool.coverage.run]
+source = ["mumax_oommf_tools"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true

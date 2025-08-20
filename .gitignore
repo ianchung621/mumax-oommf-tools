@@ -1,5 +1,8 @@
 .vscode/
 dev/
+dev.ipynb
+data/
+scripts
 
 **/__pycache__/
 **/.DS_Store

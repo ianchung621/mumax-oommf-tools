@@ -9,7 +9,8 @@ description = "Toolkit for reading, visualizing, and analyzing full Mumax3 and O
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "Hung-Yen Chung", email = "ianchung621.email@gmail.com" }
+    { name = "Hung-Yen Chung", email = "ianchung621.email@gmail.com" },
+    { name = "Chia-Yun Hu", email = "hujoanna819@gmail.com"}
 ]
 keywords = ["micromagnetics", "mumax3", "oommf", "ovf", "simulation", "magnetization", "hdf5"]
 classifiers = [

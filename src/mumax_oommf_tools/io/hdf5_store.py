@@ -71,7 +71,7 @@ def build_h5_from_ovfs(
     fdn : str
         Folder containing the OVF/OMF output files.
         Supports both Mumax3 (*.ovf) and OOMMF (.ovf/.omf) ovf2 layouts.
-    h5_name : str, default=DEFAULT_H5NAME -> "result.h5"
+    h5_name : str, default=DEFAULT_H5NAME
         Name of the HDF5 file to create inside `fdn`.
     overwrite : bool, default=False
         If True, remove existing file at the target path before writing.
@@ -138,7 +138,7 @@ def build_h5_from_ovfs(
         # Remaining frames
         iterable = fns[1:]
         if show_progress:
-            iterable = tqdm(iterable, desc=f"Parsing OVF files under {fdn}")
+            iterable = tqdm(iterable, desc=f"Parsing OVF files under {fdn}", unit='file')
 
         for ti, path in enumerate(iterable, start=1):
 

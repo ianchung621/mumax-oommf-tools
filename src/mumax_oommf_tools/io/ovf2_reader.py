@@ -1,16 +1,17 @@
 import numpy as np
 
+from .exceptions import OVF2Error
 from ..configs import OVF2_FIRST_LINE, \
     HEADER_READ_BYTES, HEADER_DTYPES, HEADER_BEGIN_MARKER, HEADER_END_MARKER, \
     DATA_BEGIN_MARKER, DATA_END_MARKER, \
     BINARY4_FLAG, BINARY8_FLAG
 
-def extract_metadata(content: bytes) -> dict[str, int|float|str]:
+def extract_metadata(content: bytes, fn: str) -> dict[str, int|float|str]:
     start = content.find(HEADER_BEGIN_MARKER)
     end = content.find(HEADER_END_MARKER)
 
     if start == -1 or end == -1:
-        raise ValueError("Header markers not found.")
+        raise OVF2Error(fn, "Header markers not found.")
 
     header_bytes = content[start + len(HEADER_BEGIN_MARKER):end]
     header_lines = header_bytes.decode().splitlines()
@@ -44,12 +45,12 @@ def reorder_xyz(m_flat: np.ndarray, X: int, Y: int, Z: int) -> np.ndarray:
     """
     return np.transpose(m_flat.reshape(Z, Y, X, 3), (2, 1, 0, 3))
 
-def extract_magnetic_data_from_text(content: bytes) -> np.ndarray:
+def extract_magnetic_data_from_text(content: bytes, fn: str) -> np.ndarray:
     
     start = content.find(DATA_BEGIN_MARKER)
     end   = content.find(DATA_END_MARKER)
     if start == -1 or end == -1 or end <= start:
-        raise ValueError("Data block not found.")
+        raise OVF2Error(fn, "Data block not found.")
 
     payload_start = content.find(b"\n", start) + 1
 
@@ -58,7 +59,7 @@ def extract_magnetic_data_from_text(content: bytes) -> np.ndarray:
     m_flat = np.fromstring(payload.decode(), sep=" ", dtype=np.float32)
     
     if m_flat.size % 3 != 0:
-        raise ValueError("Data size not divisible by 3 (valuedim must be 3).")
+        raise OVF2Error(fn, "Data size not divisible by 3 (valuedim must be 3).")
 
     return m_flat
 
@@ -98,14 +99,28 @@ def read_ovf2(fn: str) -> tuple[dict[str, int|float|str], np.ndarray]:
         head = f.read(HEADER_READ_BYTES)
 
     if not head.startswith(OVF2_FIRST_LINE):
-        raise ValueError("Not a valid OVF 2.0 file (missing OVF2 header).")
+        first_line = head.splitlines()[0].decode(errors="replace") if head else "<empty file>"
+        raise OVF2Error(
+            fn,
+            f"Invalid OVF2 header. Expected first line {OVF2_FIRST_LINE!r}, "
+            f"First line was: {first_line!r}"
+        )
 
-    metadata = extract_metadata(head)
+    metadata = extract_metadata(head, fn)
 
-    if metadata.get("meshtype", "").lower() != "rectangular":
-        raise ValueError(f"Unsupported mesh type: {metadata.get('meshtype')}, expected 'rectangular'")
-    if metadata.get("valuedim") != 3:
-        raise ValueError(f"Unsupported valuedim: {metadata.get('valuedim')}, expected 3")
+    mesh_type = metadata.get("meshtype", "")
+    if mesh_type.lower() != "rectangular":
+        raise OVF2Error(
+            fn,
+            f"Unsupported mesh type. Expected 'rectangular', got {mesh_type!r}"
+        )
+    
+    valuedim = metadata.get("valuedim")
+    if valuedim != 3:
+        raise OVF2Error(
+            fn,
+            f"Unsupported valuedim. Expected 3, got {valuedim!r}"
+        )
     
     X, Y, Z = metadata["xnodes"], metadata["ynodes"], metadata["znodes"]
     N = X * Y * Z
@@ -120,27 +135,42 @@ def read_ovf2(fn: str) -> tuple[dict[str, int|float|str], np.ndarray]:
 
     # for Binary 4 and Binary 8, return view from memmap, efficient
     if mode == b"Binary 4":
-        if head[payload_start:payload_start+4] != BINARY4_FLAG:
-            raise ValueError("Binary4 flag mismatch (expected 1234567.0 float32)")
-        offset = payload_start + 4
-        dtype = "<f4"
+        flag = head[payload_start:payload_start+4]
+        if flag != BINARY4_FLAG:
+            raise OVF2Error(
+                fn,
+                f"Binary4 flag mismatch. Expected {BINARY4_FLAG}, got {flag}"
+            )
+        offset, dtype = payload_start + 4, "<f4"
+
     elif mode == b"Binary 8":
-        if head[payload_start:payload_start+8] != BINARY8_FLAG:
-            raise ValueError("Binary8 flag mismatch (expected 123456789012345.0 float64)")
-        offset = payload_start + 8
-        dtype = "<f8"
+        flag = head[payload_start:payload_start+8]
+        if flag != BINARY8_FLAG:
+            raise OVF2Error(
+                fn,
+                f"Binary8 flag mismatch. Expected {BINARY8_FLAG}, got {flag}"
+            )
+        offset, dtype = payload_start + 8, "<f8"
 
     # for Text, require full file read, not efficient
     elif mode == b"Text":
         with open(fn, 'rb') as f:
             full_content = f.read()
-        m_flat = extract_magnetic_data_from_text(full_content)
+        m_flat = extract_magnetic_data_from_text(full_content, fn)
         if len(m_flat) != N:
-            raise ValueError(f"Nodes number mismatch: got {len(m_flat)}, expected xnodes*ynodes*znodes = {N}")
+            raise OVF2Error(
+                fn,
+                f"Node count mismatch. Expected xnodes*ynodes*znodes={N}, "
+                f"but data contained {len(m_flat)} values"
+            )
         magnetization = reorder_xyz(m_flat, X, Y, Z)
         return metadata, magnetization
     else:
-        raise ValueError(f"Unsupported data mode: {mode}, supported: Text, Binary 4, Binary 8")
+        raise OVF2Error(
+            fn,
+            f"Unsupported data mode. Expected one of 'Text', 'Binary 4', 'Binary 8', "
+            f"but got {mode!r}"
+        )
 
     mm = np.memmap(fn, mode="r", dtype=dtype, offset=offset, shape=3 * N)
     magnetization = reorder_xyz(mm, X, Y, Z)

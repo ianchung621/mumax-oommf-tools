@@ -27,6 +27,15 @@ def _nbytes(shape: Tuple[int, ...], dtype: np.dtype) -> int:
         n *= s
     return n * np.dtype(dtype).itemsize
 
+def _read_metadata(attrs: h5py.AttributeManager):
+    meta = {}
+    for k, v in attrs.items():
+        if isinstance(v, (np.float64, np.int64)):
+            meta[k] = v.item()
+        else:
+            meta[k] = v
+    return meta
+
 def read_simulation_result(
     fdn: str,
     h5_name: str = DEFAULT_H5NAME,
@@ -57,6 +66,8 @@ def read_simulation_result(
 
     Returns
     -------
+    metadata, time, magnetization
+
     metadata : dict
         Dictionary of parsed header fields. Keys include 'xnodes', 'ynodes',
         'znodes', 'xstepsize', 'ystepsize', 'zstepsize', 'meshunit', etc.
@@ -111,7 +122,7 @@ def read_simulation_result(
                     f"{_format_bytes(int(total_ram))}."
                 )
 
-        metadata = dict(f.attrs)
+        metadata = _read_metadata(f.attrs)
         time = tset[...].astype(np.float64, copy=False)
         magnetization = mset[...]
 

@@ -57,9 +57,6 @@ def extract_magnetic_data_from_text(content: bytes, fn: str) -> np.ndarray:
     payload = content[payload_start:end]
 
     m_flat = np.fromstring(payload.decode(), sep=" ", dtype=np.float32)
-    
-    if m_flat.size % 3 != 0:
-        raise OVF2Error(fn, "Data size not divisible by 3 (valuedim must be 3).")
 
     return m_flat
 
@@ -126,6 +123,8 @@ def read_ovf2(fn: str) -> tuple[dict[str, int|float|str], np.ndarray]:
     N = X * Y * Z
 
     data_marker_start = head.find(DATA_BEGIN_MARKER)
+    if data_marker_start == -1:
+        raise OVF2Error(fn, "Data block not found.")
 
     data_marker_end = head.find(b"\n", data_marker_start) + 1
     data_marker_line = head[data_marker_start:data_marker_end]
@@ -157,10 +156,10 @@ def read_ovf2(fn: str) -> tuple[dict[str, int|float|str], np.ndarray]:
         with open(fn, 'rb') as f:
             full_content = f.read()
         m_flat = extract_magnetic_data_from_text(full_content, fn)
-        if len(m_flat) != N:
+        if len(m_flat) != 3 * N:
             raise OVF2Error(
                 fn,
-                f"Node count mismatch. Expected xnodes*ynodes*znodes={N}, "
+                f"Node count mismatch. Expected xnodes*ynodes*znodes={3 * N}, "
                 f"but data contained {len(m_flat)} values"
             )
         magnetization = reorder_xyz(m_flat, X, Y, Z)

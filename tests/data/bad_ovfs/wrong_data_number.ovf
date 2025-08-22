@@ -1,0 +1,39 @@
+# OOMMF OVF 2.0
+# Segment count: 1
+# Begin: Segment
+# Begin: Header
+# Title: tiny 2x2x2 test
+# meshtype: rectangular
+# meshunit: m
+# xmin: 0
+# ymin: 0
+# zmin: 0
+# xmax: 1e-09
+# ymax: 1e-09
+# zmax: 1e-09
+# valuedim: 3
+# valuelabels: mx my mz
+# valueunits: A/m A/m A/m
+# Synthetic test data for CI (not from a real simulation)
+# xbase: 0
+# ybase: 0
+# zbase: 0
+# xnodes: 2
+# ynodes: 2
+# znodes: 2
+# xstepsize: 1e-09
+# ystepsize: 1e-09
+# zstepsize: 1e-09
+# End: Header
+# Begin: Data Text
+1.0 1.0 1.0
+2.0 1.0 1.0
+1.0 2.0 1.0
+2.0 2.0 1.0
+1.0 1.0 2.0
+2.0 1.0 2.0
+1.0 2.0 2.0
+2.0 2.0 2.0
+1.5
+# End: Data Text
+# End: Segment

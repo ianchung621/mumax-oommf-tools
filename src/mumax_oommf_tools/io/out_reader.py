@@ -38,10 +38,7 @@ def _read_metadata(attrs: h5py.AttributeManager):
 
 def read_simulation_result(
     fdn: str,
-    h5_name: str = DEFAULT_H5NAME,
-    build_if_missing: bool = True,
-    overwrite: bool = False,
-    compression: Literal["gzip", "lzf"] | None = None,
+    overwrite_cache: bool = False,
     show_progress: bool = False
 ) -> tuple[dict, np.ndarray, np.ndarray]:
     """
@@ -51,16 +48,8 @@ def read_simulation_result(
     ----------
     fdn : str
         Path to the simulation folder containing OVF/OMF files
-    h5_name : str, default=DEFAULT_H5NAME
-        Name of the HDF5 file inside `fdn`.
-    build_if_missing : bool, default=True
-        If True, build the HDF5 file from OVF/OMF files when not present.
-        If False, raise FileNotFoundError if the HDF5 file is missing.
     overwrite : bool, default=False
-        If True and the target HDF5 file exists, it will be removed and rebuilt.
-    compression : {"gzip", "lzf", None}, default=None
-        Compression filter for the HDF5 magnetization dataset, used only
-        when building a new HDF5 file.
+        If True and cache HDF5 file exists, it will be removed and rebuilt.
     show_progress : bool, default=False
         If True, display a tqdm progress bar when building from OVF/OMF files.
 
@@ -82,19 +71,17 @@ def read_simulation_result(
           - Z = znodes
           - 3 = vector components (mx, my, mz)
     """
-    h5_path = os.path.join(fdn, h5_name)
+    h5_path = os.path.join(fdn, DEFAULT_H5NAME)
 
-    if os.path.exists(h5_path) and overwrite:
+    if os.path.exists(h5_path) and overwrite_cache:
         os.remove(h5_path)
 
     if not os.path.exists(h5_path):
-        if not build_if_missing:
-            raise FileNotFoundError(f"No HDF5 at {h5_path}. Set build_if_missing=True.")
         build_h5_from_ovfs(
             fdn,
-            h5_name=h5_name,
-            overwrite=overwrite,
-            compression=compression,
+            h5_name=DEFAULT_H5NAME,
+            overwrite=overwrite_cache,
+            compression=None,
             show_progress=show_progress
         )
 

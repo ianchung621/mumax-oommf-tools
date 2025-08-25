@@ -30,7 +30,7 @@ def test_ovf_shapes_and_values(fname):
 
 def test_out():
     OUT_DIR = Path(__file__).parent / "data" / "test.out"
-    metadata, time, magnetization = read_simulation_result(OUT_DIR, overwrite=True)
+    metadata, time, magnetization = read_simulation_result(OUT_DIR, overwrite_cache=True)
 
     assert len(time) == 10
     assert magnetization.shape == (10, 100, 10, 2, 3)

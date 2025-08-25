@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-from mumax_oommf_tools import read_ovf2  # adjust to your actual import path
+from mumax_oommf_tools import read_ovf2, read_simulation_result
 
 DATA_DIR = Path(__file__).parent / "data" / "tiny_ovfs"
 FILES = [
@@ -12,7 +12,7 @@ FILES = [
 ]
 
 @pytest.mark.parametrize("fname", FILES)
-def test_shapes_and_values(fname):
+def test_ovf_shapes_and_values(fname):
     fn = DATA_DIR / fname
     meta, arr = read_ovf2(fn)
 
@@ -26,3 +26,11 @@ def test_shapes_and_values(fname):
                 expected[i, j, k] = (i+1, j+1, k+1)
 
     assert np.allclose(arr, expected, rtol=1e-6, atol=1e-6)
+
+
+def test_out():
+    OUT_DIR = Path(__file__).parent / "data" / "test.out"
+    metadata, time, magnetization = read_simulation_result(OUT_DIR, overwrite_cache=True)
+
+    assert len(time) == 10
+    assert magnetization.shape == (10, 100, 10, 2, 3)

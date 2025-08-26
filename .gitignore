@@ -8,3 +8,5 @@ scripts
 **/.DS_Store
 *.egg-info/
 .pytest_cache/
+
+*.h5

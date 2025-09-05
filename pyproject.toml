@@ -10,7 +10,8 @@ requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
     { name = "Hung-Yen Chung", email = "ianchung621.email@gmail.com" },
-    { name = "Chia-Yun Hu", email = "hujoanna819@gmail.com"}
+    { name = "Chia-Yun Hu", email = "hujoanna819@gmail.com" },
+    { name = "Chia-Kai Chang", email = "kai930711@gmail.com" }
 ]
 keywords = ["micromagnetics", "mumax3", "oommf", "ovf", "simulation", "magnetization", "hdf5"]
 classifiers = [
